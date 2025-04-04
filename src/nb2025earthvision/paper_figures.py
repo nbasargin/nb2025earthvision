@@ -23,9 +23,10 @@ def setup_matplotlib_paper_figure_styles():
     else:
         print("Using default fonts, figures might look off if Times New Roman is not installed")
     # Other params
+    plt.rcParams["font.family"] = "serif" 
     plt.rcParams["font.serif"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
     plt.rcParams["font.size"] = 6
-    plt.rcParams["font.family"] = "serif"
     plt.rcParams["axes.linewidth"] = 0.5
     plt.rcParams["axes.titlesize"] = 6
     plt.rcParams["axes.labelsize"] = 6
@@ -684,14 +685,14 @@ def look_statistics_and_resolution():
 
 def main_paper_figures():
     setup_matplotlib_paper_figure_styles()
-    fig_labeled_dataset()
-    fig_fsar_pauli_slc()
-    fig_moisture_comparison()
+    # fig_labeled_dataset()
+    # fig_fsar_pauli_slc()
+    # fig_moisture_comparison()
     fig_train_val_test_scatter()
     fig_ood_scatter()
-    fig_stddev_comparison()
-    fig_explainability()
-    look_statistics_and_resolution()
+    # fig_stddev_comparison()
+    # fig_explainability()
+    # look_statistics_and_resolution()
 
 
 if __name__ == "__main__":
