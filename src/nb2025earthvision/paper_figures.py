@@ -45,8 +45,9 @@ def get_selected_regions_and_passes():
     label_pass_regions = [
         ("CR maize", "14cropex0914", [ev25.CORN_C2_TRAIN, ev25.CORN_C2_VAL, ev25.CORN_C1]),
         ("HT wheat", "22hterra0404", [ev25.CREA_DW]),
-        ("HT bare soil", "22hterra0104", [ev25.CREA_BS_QU]),
         ("HT maize", "22hterra0504", [ev25.CAIONE_MA]),
+        ("CR cucumbers", "14cropex0914", [ev25.CUCUMBERS_CU1]),
+        # ("HT bare soil", "22hterra0104", [ev25.CREA_BS_QU]),
     ]
     return label_pass_regions
 
@@ -213,6 +214,7 @@ def _fig_labeled_dataset_layout() -> tuple[plt.Figure, np.ndarray]:
 
 
 def fig_labeled_dataset():
+    print("fig_labeled_dataset")
     band = constants.band
     version = constants.code_version
     pass_names = [
@@ -277,6 +279,7 @@ def _fig_fsar_pauli_slc_layout(num_rows) -> tuple[plt.Figure, np.ndarray]:
 
 
 def fig_fsar_pauli_slc():
+    print("fig_fsar_pauli_slc")
     band = constants.band
     version = constants.code_version
     pass_labels_names = [("CROPEX, July 2014", "14cropex1318"), ("HTERRA, June 2022", "22hterra0504")]
@@ -351,6 +354,7 @@ def _load_downsampled_data(pass_name, band, region_names, look_mode, goal_px_siz
 
 
 def fig_moisture_comparison():
+    print("fig_moisture_comparison")
     look_mode = constants.look_mode
     seed = 0
     version = constants.code_version
@@ -363,6 +367,7 @@ def fig_moisture_comparison():
     fig, axs, caxs = _grid_layout_bottom_cb(num_rows=len(label_pass_regions), num_cols=5)
     moisture_style = dict(vmin=0, vmax=50, cmap="viridis_r", origin="lower", aspect="auto")
     for row, (label, pass_name, region_names) in enumerate(label_pass_regions):
+        print(f"fig_moisture_comparison: {label}, {pass_name}")
         campaign = campaign_data.get_campaign(pass_name)
         lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut()
         ax_pauli, ax_sup, ax_hyb, ax_self, ax_phys = axs[row]
@@ -417,16 +422,17 @@ def fig_moisture_comparison():
         else:
             cax.axis("off")  # no colorbar under pauli
     caxs[1].set_ylabel(
-        "soil moisture\nin %",
+        "predicted soil\nmoisture $w_s'$ in %",
         rotation=0,
         horizontalalignment="right",
         verticalalignment="top",
     )
-    fig.savefig(ev25.get_paper_figures_folder() / f"fig_moisture_comparison_regions_v{version}s{seed}.png")
+    fig.savefig(ev25.get_paper_figures_folder() / f"fig_moisture_comparison_v{version}s{seed}.png")
     plt.close("all")
 
 
 def fig_train_val_test_scatter():
+    print("fig_train_val_test_scatter")
     band = constants.band
     look_mode = constants.look_mode
     version = constants.code_version
@@ -449,6 +455,7 @@ def fig_train_val_test_scatter():
 
 
 def fig_ood_scatter():
+    print("fig_ood_scatter")
     band = constants.band
     look_mode = constants.look_mode
     version = constants.code_version
@@ -490,6 +497,7 @@ def _get_moisture_stddev_between_models(
 
 
 def fig_stddev_comparison():
+    print("fig_stddev_comparison")
     look_mode = constants.look_mode
     seeds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     version = constants.code_version
@@ -515,6 +523,7 @@ def fig_stddev_comparison():
     fig, axs, caxs = _grid_layout_bottom_cb(num_rows=len(label_pass_regions), num_cols=5)
     stddev_style = dict(vmin=0, vmax=10, cmap="RdYlGn_r", origin="lower", aspect="auto")
     for row, (label, pass_name, region_names) in enumerate(label_pass_regions):
+        print(f"fig_stddev_comparison: {label}, {pass_name}")
         campaign = campaign_data.get_campaign(pass_name)
         lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut()
         ax_pauli, ax_sup, ax_hyb, ax_self, ax_phys = axs[row]
@@ -570,6 +579,7 @@ def _relative_reconstruction_error_batch(data, reconstruction):
 
 
 def fig_explainability():
+    print("fig_explainability")
     look_mode = constants.look_mode
     seed = 0
     version = constants.code_version
@@ -685,14 +695,14 @@ def look_statistics_and_resolution():
 
 def main_paper_figures():
     setup_matplotlib_paper_figure_styles()
-    # fig_labeled_dataset()
-    # fig_fsar_pauli_slc()
-    # fig_moisture_comparison()
+    fig_labeled_dataset()
+    fig_fsar_pauli_slc()
+    fig_moisture_comparison()
     fig_train_val_test_scatter()
     fig_ood_scatter()
-    # fig_stddev_comparison()
-    # fig_explainability()
-    # look_statistics_and_resolution()
+    fig_stddev_comparison()
+    fig_explainability()
+    look_statistics_and_resolution()
 
 
 if __name__ == "__main__":
