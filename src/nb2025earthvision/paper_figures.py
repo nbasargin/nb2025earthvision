@@ -37,6 +37,8 @@ def setup_matplotlib_paper_figure_styles():
     plt.rcParams["grid.linewidth"] = 0.5
     plt.rcParams["xtick.major.width"] = 0.5
     plt.rcParams["ytick.major.width"] = 0.5
+    plt.rcParams["xtick.major.pad"] = 2
+    plt.rcParams["ytick.major.pad"] = 2
     plt.rcParams["figure.dpi"] = 450
 
 
@@ -65,7 +67,7 @@ def _add_axes(fig: plt.Figure, left_inch, bottom_inch, width_inch, height_inch) 
 
 def _setup_scatter_ax(ax: plt.Axes):
     ax.yaxis.tick_right()
-    sm_min, sm_max, sm_top_buffer = 0, 50, 25
+    sm_min, sm_max, sm_top_buffer = 0, 50, 22
     center_line = np.array([sm_min, sm_max])
     ax.plot(center_line, center_line, color="black", linestyle="dashed", linewidth=0.5, alpha=0.2)  # center line
     ax.plot(center_line, center_line + 10, color="black", linestyle="dotted", linewidth=0.5, alpha=0.1)  # +10 line
@@ -183,10 +185,10 @@ def _plot_filtered_scatters_into_axis(
 
 
 def _scatter_grid_layout(num_rows, num_cols, fig_width=_WIDTH_1COL):
-    padding_top, padding_right, padding_bottom, padding_left = 0.12, 0.28, 0.27, 0.12
+    padding_top, padding_right, padding_bottom, padding_left = 0.12, 0.28, 0.27, 0.15
     gap = 0.07
     cell_w = (fig_width - gap * (num_cols - 1) - padding_left - padding_right) / num_cols
-    cell_h = cell_w * 1.1  # cell_w / (sm_max + sm_min) * (sm_max + sm_min + sm_top_buffer)
+    cell_h = cell_w  # * 1.1  # cell_w / (sm_max + sm_min) * (sm_max + sm_min + sm_top_buffer)
     fig_height = padding_top + cell_h * num_rows + gap * (num_rows - 1) + padding_bottom
     fig = plt.figure(figsize=(fig_width, fig_height))
     axs = []
@@ -222,7 +224,7 @@ def _plot_scatter_grid(ds_list: list[datasets.LabeledDataset], seeds):
     model_dict = {
         "Supervised": supervised_models,
         "Hybrid AE": hybrid_models,
-        "Self-sup. AE": unsupervised_models,
+        "Self-superv. AE": unsupervised_models,
         "Physical": physical_models,
     }
     # figure setup
@@ -273,16 +275,17 @@ def _fig_labeled_dataset_layout() -> tuple[plt.Figure, np.ndarray]:
     fig_width = _WIDTH_2COL
     padding_top, padding_right, padding_bottom, padding_left = 0.16, 0.16, 0.01, 0.16
     gap = 0.03
-    cell_size = (fig_width - gap * (num_cols - 1) - padding_left - padding_right) / num_cols
-    fig_height = padding_top + cell_size * num_rows + gap * (num_rows - 1) + padding_bottom
+    cell_w = (fig_width - gap * (num_cols - 1) - padding_left - padding_right) / num_cols
+    cell_h = cell_w * 1000 / 1200
+    fig_height = padding_top + cell_h * num_rows + gap * (num_rows - 1) + padding_bottom
     fig = plt.figure(figsize=(fig_width, fig_height))
     axs = []
     for row in range(num_rows):
-        bottom_inch = padding_bottom + (cell_size + gap) * (num_rows - row - 1)
+        bottom_inch = padding_bottom + (cell_h + gap) * (num_rows - row - 1)
         row_axs = []
         for col in range(num_cols):
-            left_inch = padding_left + (cell_size + gap) * col
-            row_axs.append(_add_axes(fig, left_inch, bottom_inch, cell_size, cell_size))
+            left_inch = padding_left + (cell_w + gap) * col
+            row_axs.append(_add_axes(fig, left_inch, bottom_inch, cell_w, cell_h))
         axs.append(row_axs)
     return fig, np.array(axs)
 
@@ -487,7 +490,7 @@ def fig_moisture_comparison():
             ax_pauli.set_title("Pauli RGB")
             ax_sup.set_title("Supervised")
             ax_hyb.set_title("Hybrid AE")
-            ax_self.set_title("Self-sup. AE")
+            ax_self.set_title("Self-superv. AE")
             ax_phys.set_title("Physical")
     for i, cax in enumerate(caxs):
         if i > 0:
@@ -630,7 +633,7 @@ def fig_stddev_comparison():
             ax_pauli.set_title("Pauli RGB")
             ax_sup.set_title("Supervised")
             ax_hyb.set_title("Hybrid AE")
-            ax_self.set_title("Self-sup. AE")
+            ax_self.set_title("Self-superv. AE")
             ax_phys.set_title("Physical")
     for i, cax in enumerate(caxs):
         if i > 0:
@@ -828,15 +831,15 @@ def look_statistics_and_resolution():
 
 def main_paper_figures():
     setup_matplotlib_paper_figure_styles()
-    # fig_labeled_dataset()
-    # fig_fsar_pauli_slc()
-    # fig_moisture_comparison()
-    # fig_train_val_test_scatter()
-    # fig_ood_scatter()
-    # fig_stddev_comparison()
-    # fig_explainability()
+    fig_labeled_dataset()
+    fig_fsar_pauli_slc()
+    fig_moisture_comparison()
+    fig_train_val_test_scatter()
+    fig_ood_scatter()
+    fig_stddev_comparison()
+    fig_explainability()
     fig_filtering()
-    # look_statistics_and_resolution()
+    look_statistics_and_resolution()
 
 
 if __name__ == "__main__":

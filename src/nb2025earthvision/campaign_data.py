@@ -194,7 +194,7 @@ def get_cropex_maize_image_by_pass(pass_name):
     """
     Load a photo from the field. The image is cropped to a square.
     """
-    subpath, ymin, xmin, size = {
+    subpath, ymin, xmin, height = {
         # "14cropex0210": ("2014_05_15/Soil_Moisture/C1/IMG_1487.JPG", 1300, 1200, 1000), # CORN_C1
         "14cropex0210": ("2014_05_15/Soil_Moisture/C2/DSCN5134.JPG", 0, 0, 2000),  # CORN_C2
         # "14cropex0305": ("2014_05_22/Soil_Moisture/C1/img_1555.jpg", 350, 0, 1500), # CORN_C1
@@ -208,8 +208,9 @@ def get_cropex_maize_image_by_pass(pass_name):
         # "14cropex1114": ("2014_07_03/Soil_Moisture/C1/PICT0076.JPG", 780, 940, 1280), # cr14.CORN_C1
         "14cropex1114": ("2014_07_03/Soil_Moisture/C2/PICT0078.JPG", 590, 550, 1400),  # cr14.CORN_C2
         # "14cropex1318": ("2014_07_24/Biomass/C1/C1.1/cimg5440.jpg", 350, 0, 2730), # cr14.CORN_C1
-        "14cropex1318": ("2014_07_24/Biomass/C2/C2.2/cimg5453.jpg", 110, 700, 2560),  # cr14.CORN_C2
+        "14cropex1318": ("2014_07_24/Biomass/C2/C2.2/cimg5453.jpg", 110, 200, 2560),  # cr14.CORN_C2
     }[pass_name]
+    width = int(height / 1000 * 1200)
     img = np.asarray(Image.open(CROPEX_PHOTO_PATH / subpath))
-    img = img[ymin : ymin + size, xmin : xmin + size].copy()
+    img = img[ymin : ymin + height, xmin : xmin + width].copy()
     return img
