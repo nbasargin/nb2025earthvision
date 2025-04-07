@@ -23,7 +23,7 @@ def setup_matplotlib_paper_figure_styles():
     else:
         print("Using default fonts, figures might look off if Times New Roman is not installed")
     # Other params
-    plt.rcParams["font.family"] = "serif" 
+    plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = "Times New Roman"
     plt.rcParams["mathtext.fontset"] = "cm"
     plt.rcParams["font.size"] = 6
@@ -93,6 +93,80 @@ def _plot_scatters_into_axis(ax: plt.Axes, models: list[ev25.MoisturePredictor],
         rmse = ev25.get_rmse(predicted, target)
         bias = ev25.get_bias(predicted, target).item()
         pearson = ev25.pearson_corrcoef(predicted * 100, target * 100).item()
+        rmse_list.append(rmse)
+        bias_list.append(bias)
+        pearson_list.append(pearson)
+    rmse_mean = np.mean(rmse_list) * 100
+    rmse_std = np.std(rmse_list) * 100
+    bias_mean = np.mean(bias_list) * 100
+    bias_std = np.std(bias_list) * 100
+    pearson_mean = np.mean(pearson_list)
+    pearson_std = np.std(pearson_list)
+    metrics_str = f"RMSE: {rmse_mean:.2f} ± {rmse_std:.2f}\n"
+    metrics_str += f"Bias: {bias_mean:.2f} ± {bias_std:.2f}\n"
+    metrics_str += f"Pearson: {pearson_mean:.2f} ± {pearson_std:.2f}"
+    ax.text(0.03, 0.97, metrics_str, transform=ax.transAxes, verticalalignment="top", fontsize=5)
+
+
+def _plot_filtered_scatters_into_axis(
+    ax: plt.Axes, encoders: list[ev25.CoherencyEncoder], dataset: datasets.LabeledDataset, threshold
+):
+    # threshold: number between 0 and 1, defines max allowed normalized volume power and relative reconstruction error
+    rmse_list, bias_list, pearson_list = [], [], []
+    decoder = ev25.PhysicalDecoder()
+    m_s, plant_mst, phi = constants.m_s, constants.plant_mst, constants.phi
+    sand, clay, frequency = constants.sand, constants.clay, constants.frequency
+    t3, incidence = dataset.t3_tensors, dataset.inc_tensors
+    for idx, encoder in enumerate(encoders):
+        color = _get_color(idx)
+        # soil moisture
+        m_d, m_v, soil_mst, delta = encoder.forward(t3_batch=t3, incidence_batch=incidence)
+        # component powers
+        xbragg_power, dihedral_power, volume_power = decoder.get_component_powers_np(
+            m_s=m_s,
+            m_d=m_d,
+            m_v=m_v,
+            soil_mst=soil_mst,
+            plant_mst=plant_mst,
+            delta=delta,
+            phi=phi,
+            incidence=incidence,
+            sand=sand,
+            clay=clay,
+            frequency=frequency,
+        )
+        power_sum = xbragg_power + dihedral_power + volume_power
+        rel_vol_power = torch.tensor(volume_power / power_sum)
+        # reconstruction error
+        reconstruction = decoder.forward(
+            m_s=m_s,
+            m_d=m_d,
+            m_v=m_v,
+            soil_mst=soil_mst,
+            plant_mst=plant_mst,
+            delta=delta,
+            phi=phi,
+            incidence=incidence,
+            sand=sand,
+            clay=clay,
+            frequency=frequency,
+        )
+        rec_err = _relative_reconstruction_error_batch(t3, reconstruction)
+        # apply validity conditions
+        valid_samples = (rel_vol_power < threshold) & (rec_err < threshold)
+        predicted_valid = soil_mst[valid_samples]
+        target_valid = dataset.sm_tensors[valid_samples]
+        ax.scatter(
+            x=target_valid.cpu().detach().numpy() * 100,
+            y=predicted_valid.cpu().detach().numpy() * 100,
+            c=color,
+            s=4,
+            linewidth=0,
+            alpha=0.2,
+        )
+        rmse = ev25.get_rmse(predicted_valid, target_valid)
+        bias = ev25.get_bias(predicted_valid, target_valid).item()
+        pearson = ev25.pearson_corrcoef(predicted_valid * 100, target_valid * 100).item()
         rmse_list.append(rmse)
         bias_list.append(bias)
         pearson_list.append(pearson)
@@ -314,7 +388,7 @@ def _grid_layout_bottom_cb(
     cbar_height = 0.05
     gap = 0.03
     cell_w = (default_width - gap * (default_cols - 1) - padding_left - padding_right) / default_cols
-    cell_h = cell_w * 0.89 # squeeze a bit
+    cell_h = cell_w * 0.89  # squeeze a bit
     fig_width = cell_w * num_cols + padding_left + padding_right + gap * (num_cols - 1)
     fig_height = padding_top + cell_h * num_rows + gap * num_rows + cbar_height + padding_bottom
     fig = plt.figure(figsize=(fig_width, fig_height))
@@ -677,6 +751,65 @@ def fig_explainability():
     plt.close("all")
 
 
+def fig_filtering():
+    print("fig_filtering")
+    look_mode = constants.look_mode
+    seeds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    threshold_a, threshold_b, threshold_c = 0.6, 0.4, 0.2
+    version = constants.code_version
+    band = constants.band
+    # models
+    hybrid_encoders = []
+    for seed in seeds:
+        hybrid_path = ev25.get_hybrid_model_path(look_mode, version, seed)
+        hybrid_encoders.append(ev25.load_encoder(hybrid_path))
+    # datasets
+    ds_id_label = [
+        # (datasets.CROPEX_MA_TRAIN, "Train, $\mathcal{D}_{train}$"),
+        # (datasets.CROPEX_MA_VAL, "Validation, $\mathcal{D}_{val}$"),
+        (datasets.CROPEX_MA_TEST, "Test, $\mathcal{D}_{test}$"),
+        # (datasets.HTERRA_WH_CREA, "HT wheat, $\mathcal{D}_{wh}$"),
+        # (datasets.HTERRA_MA_CAIONE, "HT maize, $\mathcal{D}_{ma}$"),
+        # (datasets.CROPEX_CU, "CR cucumbers, $\mathcal{D}_{cu}$"),
+    ]
+    ds_list: list[datasets.LabeledDataset] = []
+    dataset_folder = ev25.get_dataset_folder()
+    for ds_id, label in ds_id_label:
+        ds = datasets.get_labeled_dataset_by_id(ds_id, band, look_mode, dataset_folder)
+        ds.identifier = label
+        ds_list.append(ds)
+    # figure setup
+    num_rows, num_cols = len(ds_list), 4
+    fig, axs = _scatter_grid_layout(num_rows=num_rows, num_cols=num_cols)
+    # inversion
+    for row, ds in enumerate(ds_list):
+        # plot scatter
+        ax_all, ax_valid_a, ax_valid_b, ax_valid_c = axs[row]
+        _setup_scatter_ax(ax_all)
+        _setup_scatter_ax(ax_valid_a)
+        _setup_scatter_ax(ax_valid_b)
+        _setup_scatter_ax(ax_valid_c)
+        _plot_scatters_into_axis(ax_all, hybrid_encoders, ds)
+        _plot_filtered_scatters_into_axis(ax_valid_a, hybrid_encoders, ds, threshold_a)
+        _plot_filtered_scatters_into_axis(ax_valid_b, hybrid_encoders, ds, threshold_b)
+        _plot_filtered_scatters_into_axis(ax_valid_c, hybrid_encoders, ds, threshold_c)
+        # titles and labels
+        if row == 0:
+            ax_all.set_title("All points")
+            ax_valid_a.set_title(f"Threshold {threshold_a * 100:.0f} %")
+            ax_valid_b.set_title(f"Threshold {threshold_b * 100:.0f} %")
+            ax_valid_c.set_title(f"Threshold {threshold_c * 100:.0f} %")
+        if row == num_rows - 1:
+            for ax in axs[row]:
+                ax.set_xlabel("measured $w_s$", labelpad=0)
+        ax_all.set_ylabel(ds.identifier)
+        ax_valid_c.yaxis.set_label_position("right")
+        ax_valid_c.set_ylabel("predicted $w_s'$", labelpad=0)
+
+    fig.savefig(ev25.get_paper_figures_folder() / f"fig_filtering_v{version}.png")
+    plt.close("all")
+
+
 def look_statistics_and_resolution():
     band = constants.band
     look_mode = constants.look_mode
@@ -695,14 +828,15 @@ def look_statistics_and_resolution():
 
 def main_paper_figures():
     setup_matplotlib_paper_figure_styles()
-    fig_labeled_dataset()
-    fig_fsar_pauli_slc()
-    fig_moisture_comparison()
-    fig_train_val_test_scatter()
-    fig_ood_scatter()
-    fig_stddev_comparison()
-    fig_explainability()
-    look_statistics_and_resolution()
+    # fig_labeled_dataset()
+    # fig_fsar_pauli_slc()
+    # fig_moisture_comparison()
+    # fig_train_val_test_scatter()
+    # fig_ood_scatter()
+    # fig_stddev_comparison()
+    # fig_explainability()
+    fig_filtering()
+    # look_statistics_and_resolution()
 
 
 if __name__ == "__main__":
