@@ -4,7 +4,6 @@ Intended for single-pixel tasks -> slc coordinates.
 """
 
 import numpy as np
-import pandas as pd
 import shapely
 from PIL import Image
 import fsarcamp as fc
@@ -140,13 +139,9 @@ def get_region_sm_points(pass_name, band, region_names):
         }
         date_name = pass_to_date[pass_name[0:10]]
         day_moisture_points = moisture.load_soil_moisture_points(date_name)
-        # filter by field
-        filtered_moisture_dfs = [
-            moisture.filter_points_by_geometry(day_moisture_points, geometry) for geometry in geometry_list
-        ]
-        filtered_moisture_df = pd.concat(filtered_moisture_dfs, ignore_index=True)
-        # geocode
-        return moisture.geocode_points(filtered_moisture_df, campaign, pass_name, band)
+        filtered_moisture_df = fc.filter_dataframe_longlat_by_geometry_list(day_moisture_points, geometry_list)
+        lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut()
+        return fc.geocode_dataframe_longlat(filtered_moisture_df, lut)
     if pass_name.startswith("22hterra"):
         moisture = ht22.HTERRA22Moisture(HTERRA_MOISTURE_PATH)
         pass_to_period = {
@@ -162,11 +157,9 @@ def get_region_sm_points(pass_name, band, region_names):
         period_name = pass_to_period[pass_name[0:10]]
         sm_points = moisture.load_soil_moisture_points()
         sm_points = moisture.filter_points_by_period(sm_points, period_name)
-        # filter by regions
-        sm_points_regions = [moisture.filter_points_by_geometry(sm_points, geometry) for geometry in geometry_list]
-        sm_points = pd.concat(sm_points_regions, ignore_index=True)
-        sm_points = moisture.geocode_points(sm_points, campaign, band)
-        return sm_points
+        sm_points = fc.filter_dataframe_longlat_by_geometry_list(sm_points, geometry_list)
+        lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut()
+        return fc.geocode_dataframe_longlat(sm_points, lut)
     raise ValueError(f"Pass name not supported: {pass_name}")
 
 

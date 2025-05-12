@@ -14,7 +14,7 @@ dependencies = [
   "pillow",
   "matplotlib",
   "sarssm@git+https://github.com/nbasargin/sarssm#egg=v1.0.0",
-  "fsarcamp@git+https://github.com/nbasargin/fsarcamp#egg=v1.0.1",
+  "fsarcamp@git+https://github.com/nbasargin/fsarcamp#egg=v2.0.0",
 ]
 license = {text = "MIT"}
 description = "Explainable Physical PolSAR Autoencoders for Soil Moisture Estimation"
