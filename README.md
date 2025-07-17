@@ -4,11 +4,10 @@ This repository contains code to reproduce the results presented at the EarthVis
 
 The code is organized into a python package. To reproduce the results, access to the data from experimental
 F-SAR `CROPEX 2014` and `HTERRA 2022` campaigns is required.
-Furthermore, the code depends on the `fsarcamp` and `sarssm` packages for data loading and soil moisture conversion.
 
 ## Setup
 - clone this repository
-- activate a python environment
+- create a python environment, e.g. `conda create -n nb2025earthvision python=3.13`
 - install this package by running `pip install -e .` in the repository root folder (where `pyproject.toml` is located)
 - helper `fsarcamp` and `sarssm` packages will be installed from github
 - adjust paths to F-SAR data and ground measurements in `campaign_data.py`

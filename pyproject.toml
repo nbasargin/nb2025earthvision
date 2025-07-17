@@ -6,15 +6,15 @@ build-backend = "setuptools.build_meta"
 name = "nb2025earthvision"
 version = "1.0.1"
 dependencies = [
-  "numpy",
-  "torch",
-  "torchmetrics",
-  "pandas",
-  "shapely",
-  "pillow",
-  "matplotlib",
-  "sarssm@git+https://github.com/nbasargin/sarssm#egg=v1.0.0",
-  "fsarcamp@git+https://github.com/nbasargin/fsarcamp#egg=v2.0.1",
+  "numpy>=2.3.1",
+  "torch>=2.7.1",
+  "torchmetrics>=1.7.4",
+  "matplotlib>=3.10.3",
+  "pandas>=2.3.1",
+  "shapely>=2.1.1",
+  "pillow>=11.3.0",
+  "fsarcamp==2.0.1",
+  "sarssm==1.0.0",
 ]
 license = {text = "MIT"}
 description = "Explainable Physical PolSAR Autoencoders for Soil Moisture Estimation"
@@ -22,7 +22,7 @@ authors = [
     {name = "Nikita Basargin", email = "nikita.basargin@dlr.de"},
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
