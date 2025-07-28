@@ -141,7 +141,7 @@ def get_region_sm_points(pass_name, band, region_names):
         day_moisture_points = moisture.load_soil_moisture_points(date_name)
         filtered_moisture_df = fc.filter_dataframe_longlat_by_geometry_list(day_moisture_points, geometry_list)
         lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut() # fsarcamp2-specific
-        return fc.geocode_dataframe_longlat(filtered_moisture_df, lut)
+        return fc.geocode_dataframe_longlat(filtered_moisture_df, lut) # fsarcamp2-specific
     if pass_name.startswith("22hterra"):
         moisture = ht22.HTERRA22Moisture(HTERRA_MOISTURE_PATH)
         pass_to_period = {
@@ -159,7 +159,7 @@ def get_region_sm_points(pass_name, band, region_names):
         sm_points = moisture.filter_points_by_period(sm_points, period_name)
         sm_points = fc.filter_dataframe_longlat_by_geometry_list(sm_points, geometry_list)
         lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut() # fsarcamp2-specific
-        return fc.geocode_dataframe_longlat(sm_points, lut)
+        return fc.geocode_dataframe_longlat(sm_points, lut) # fsarcamp2-specific
     raise ValueError(f"Pass name not supported: {pass_name}")
 
 
