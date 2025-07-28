@@ -10,12 +10,12 @@ CORN_C2_VAL = "CORN_C2_VAL"
 
 
 # polygons
-class EarthVision2025Regions(fc.GeocodedRegions):
+class EarthVision2025Regions(fc.GeocodedRegions): # fsarcamp2-specific
     def __init__(self):
         super().__init__()
         # copy all existing regions
-        cropex_regions = cr14.CROPEX14Regions()
-        hterra_regions = ht22.HTERRA22Regions()
+        cropex_regions = cr14.CROPEX14Regions() # fsarcamp2-specific
+        hterra_regions = ht22.HTERRA22Regions() # fsarcamp2-specific
         for cropex_region_name in cropex_regions.get_geometry_names():
             self.set_geometry_longlat(cropex_region_name, cropex_regions.get_geometry_longlat(cropex_region_name))
         for hterra_region_name in hterra_regions.get_geometry_names():

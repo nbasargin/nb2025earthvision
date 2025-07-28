@@ -68,7 +68,7 @@ def get_slc(pass_name, band, pol):
 def get_region_slc_extent(pass_name, band, region_names, buffer_px=50):
     campaign = get_campaign(pass_name)
     regions = ev25.EarthVision2025Regions()
-    lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut()
+    lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut() # fsarcamp2-specific
     geometry_azrg_list = [regions.get_geometry_azrg(region_name, lut) for region_name in region_names]
     az_min, rg_min, az_max, rg_max = shapely.total_bounds(geometry_azrg_list)
     rg_min = int(rg_min - buffer_px)
@@ -140,7 +140,7 @@ def get_region_sm_points(pass_name, band, region_names):
         date_name = pass_to_date[pass_name[0:10]]
         day_moisture_points = moisture.load_soil_moisture_points(date_name)
         filtered_moisture_df = fc.filter_dataframe_longlat_by_geometry_list(day_moisture_points, geometry_list)
-        lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut()
+        lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut() # fsarcamp2-specific
         return fc.geocode_dataframe_longlat(filtered_moisture_df, lut)
     if pass_name.startswith("22hterra"):
         moisture = ht22.HTERRA22Moisture(HTERRA_MOISTURE_PATH)
@@ -158,7 +158,7 @@ def get_region_sm_points(pass_name, band, region_names):
         sm_points = moisture.load_soil_moisture_points()
         sm_points = moisture.filter_points_by_period(sm_points, period_name)
         sm_points = fc.filter_dataframe_longlat_by_geometry_list(sm_points, geometry_list)
-        lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut()
+        lut = campaign.get_pass(pass_name, band).load_gtc_sr2geo_lut() # fsarcamp2-specific
         return fc.geocode_dataframe_longlat(sm_points, lut)
     raise ValueError(f"Pass name not supported: {pass_name}")
 
